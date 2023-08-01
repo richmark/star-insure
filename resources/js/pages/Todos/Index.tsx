@@ -14,32 +14,78 @@ interface Props {
 
 export default function TodosIndex({ todos }: Props) {
     const [modalOpen, setModalOpen] = React.useState(false);
-    const { put, delete: deleteTodo } = useForm();
+    const form = useForm<{ ids: number[] }>({
+        ids: [], // Initialize ids as an empty array of numbers
+    });
+
+    const handleToggle = (id: number) => {
+        const currentIds = form.data.ids;
+        const updatedIds = currentIds.includes(id)
+            ? currentIds.filter((selectedId) => selectedId !== id)
+            : [...currentIds, id];
+
+        form.setData("ids", updatedIds);
+    };
 
     const onDelete = useSubmit({
         message: "Deleted Successfully!",
+        onFinish() {
+            resetData();
+        },
     });
 
     const onUpdate = useSubmit({
         message: "Updated Successfully!",
+        onFinish() {
+            resetData();
+        },
     });
 
-    function handleDeleteTodo(id: number) {
-        if (confirm("Are you sure you want to delete this todo?")) {
-            deleteTodo(`/todos/${id}`, onDelete);
-        }
-    }
+    const resetData = () => {
+        form.setData("ids", []);
+    };
 
-    function handleUpdateTodo(id: number) {
-        if (confirm("Are you sure you want to update the status?")) {
-            put(`/todos/${id}`, onUpdate);
+    const handleDeleteTodo = () => {
+        if (form.data.ids.length === 0) {
+            alert("Please select at least one todo to delete.");
+            return;
         }
-    }
+
+        if (confirm("Are you sure you want to delete the selected todo/s?")) {
+            form.post("/todos/bulk-delete", onDelete);
+        }
+    };
+
+    const handleUpdateTodo = () => {
+        if (form.data.ids.length === 0) {
+            alert("Please select at least one todo to update.");
+            return;
+        }
+
+        if (confirm("Are you sure you want to update the status?")) {
+            form.post("/todos/bulk-update", onUpdate);
+        }
+    };
+
+    const checkIdStatus = () => {
+        if (form.data.ids.length === 0) {
+            return false;
+        }
+
+        const result = form.data.ids.some((selectedId) => {
+            const matchedData = todos.find((todo) => todo.id === selectedId);
+            if (matchedData && matchedData.completed === true) {
+                return true;
+            }
+        });
+
+        return result;
+    };
 
     return (
         <Layout>
             <div className="container mt-12 mb-24">
-                <div className="flex flex-col gap-12">
+                <div className="mb-4 flex items-center justify-between gap-x-4">
                     <Button
                         type="button"
                         onClick={() => setModalOpen(!modalOpen)}
@@ -48,59 +94,49 @@ export default function TodosIndex({ todos }: Props) {
                         Add ToDo
                     </Button>
 
-                    {todos.map((todo) => (
+                    <Button
+                        type="button"
+                        onClick={() => handleUpdateTodo()}
+                        className="px-4 py-2 text-white"
+                        theme="info"
+                        disabled={checkIdStatus()}
+                    >
+                        Update ToDo/s
+                    </Button>
+
+                    <Button
+                        type="button"
+                        onClick={() => handleDeleteTodo()}
+                        className="px-4 py-2 text-white"
+                        theme="danger"
+                    >
+                        Delete ToDo/s
+                    </Button>
+                </div>
+
+                {todos.length === 0 ? (
+                    <Card className="flex justify-between gap-x-6 py-5">
+                        <p>No records found</p>
+                    </Card>
+                ) : (
+                    todos.map((todo) => (
                         <Card
                             key={todo.id}
                             className="flex justify-between gap-x-6 py-5"
                         >
-                            <div className="flex gap-x-4">
-                                <div className="min-w-0 flex-auto">
-                                    <p className="text-sm font-semibold leading-6 text-gray-900">
-                                        Title: {todo.title}
-                                    </p>
-                                    <p className="mt-1 truncate text-xs leading-5 text-gray-500">
-                                        Created: {todo.created_at}
-                                    </p>
-                                    <p className="mt-1 truncate text-xs leading-5 text-gray-500">
-                                        Updated: {todo.updated_at}
-                                    </p>
-                                    <p className="mt-1 truncate text-xs leading-5 text-gray-500">
-                                        Status:{" "}
-                                        {todo.completed ? "Completed" : "Todo"}
-                                    </p>
-                                </div>
-                            </div>
-                            <div className="hidden sm:flex sm:flex-col sm:items-end">
-                                <p className="text-sm leading-6 text-gray-900">
-                                    {todo.completed === false ? (
-                                        <Button
-                                            type="button"
-                                            onClick={() =>
-                                                handleUpdateTodo(todo.id)
-                                            }
-                                            className="mr-5"
-                                        >
-                                            Update
-                                        </Button>
-                                    ) : (
-                                        ""
-                                    )}
-
-                                    <Button
-                                        type="button"
-                                        onClick={() =>
-                                            handleDeleteTodo(todo.id)
-                                        }
-                                        className="mr-5"
-                                        theme="danger"
-                                    >
-                                        Delete
-                                    </Button>
-                                </p>
-                            </div>
+                            <span className="flex-1">{todo.title}</span>
+                            <p className="mt-1 truncate text-xs leading-5 text-gray-500">
+                                {todo.completed ? "Completed" : "Todo"}
+                            </p>
+                            <input
+                                type="checkbox"
+                                className="form-checkbox ml-4 h-5 w-5 text-blue-500"
+                                checked={form.data.ids.includes(todo.id)}
+                                onChange={() => handleToggle(todo.id)}
+                            />
                         </Card>
-                    ))}
-                </div>
+                    ))
+                )}
             </div>
 
             <Modal show={modalOpen} onClose={() => setModalOpen(false)}>

@@ -28,21 +28,23 @@ class TodoService
 
     /**
      * Actual saving of data
-     * @param array $aData
+     * @param array<mixed> $aData
+     * @return mixed
      */
-    public function saveTodo(array $aData)
+    public function saveTodo(array $aData): mixed
     {
         return $this->oTodo->create($aData);
     }
 
     /**
      * Check if the id exists then set the completed field to true
-     * @param int $iTodo
+     * @param array<mixed> $aTodo
+     * @return mixed
      */
-    public function updateTodo(int $iTodo)
+    public function updateTodo(array $aTodo): mixed
     {
         return $this->oTodo
-            ->findOrFail($iTodo)
+            ->whereIn('id', $aTodo)
             ->update([
                 'completed' => true
             ]);
@@ -50,18 +52,20 @@ class TodoService
 
     /**
      * Get the actual list
+     * @return mixed
      */
-    public function getTodoList()
+    public function getTodoList(): mixed
     {
-        return Todo::query()->get();
+        return $this->oTodo->get();
     }
 
     /**
-     * Check if the id exists then delete the todo
-     * @param int $iTodo
+     * Delete multiple todos
+     * @param array<mixed> $aTodo
+     * @return mixed
      */
-    public function deleteTodo(int $iTodo)
+    public function deleteTodo(array $aTodo): mixed
     {
-        return $this->oTodo->findOrFail($iTodo)->delete();
+        return $this->oTodo->whereIn('id', $aTodo)->delete();
     }
 }

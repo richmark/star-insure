@@ -20,17 +20,7 @@ class UpdateTodoRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'id'  => ['required','exists:todos,id']
+            'ids'  => ['required']
         ];
-    }
-
-    /**
-     * Merge the todo_id as id to be validated on rules function
-     */
-    public function prepareForValidation(): void
-    {
-        $this->merge([
-            'id' => $this->route('todo_id')
-        ]);
     }
 }
