@@ -1,7 +1,7 @@
-import { useForm } from '@inertiajs/react';
-import { handleChange, useSubmit } from '@/lib/forms';
-import Button from './common/Button';
-import Errors from './common/Errors';
+import { useForm } from "@inertiajs/react";
+import { handleChange, useSubmit } from "@/lib/forms";
+import Button from "./common/Button";
+import Errors from "./common/Errors";
 
 interface Props {
     closeModal: () => void;
@@ -9,11 +9,11 @@ interface Props {
 
 export default function TodoForm({ closeModal }: Props) {
     const { post, data, setData, errors } = useForm({
-        title: '',
+        title: "",
     });
 
     const onSubmit = useSubmit({
-        message: 'Todo saved',
+        message: "Todo saved",
         onSuccess: () => {
             closeModal();
         },
@@ -41,7 +41,9 @@ export default function TodoForm({ closeModal }: Props) {
             </label>
 
             <div className="flex items-center justify-end gap-6">
-                {/* BRIEF: Ability to close the modal */}
+                <Button theme="default" type="button" onClick={closeModal}>
+                    Close
+                </Button>
 
                 <Button theme="primary" type="submit">
                     Save ToDo

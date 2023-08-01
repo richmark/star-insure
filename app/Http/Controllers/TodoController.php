@@ -2,44 +2,74 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Todo;
-use Illuminate\Http\Request;
+use App\Http\Requests\StoreTodoRequest;
+use App\Http\Requests\UpdateTodoRequest;
+use App\Services\TodoService;
 
+/**
+ * Class TodoController
+ * @package App\Http\Controllers
+ * @author Richmark <richmark.jinn.ravina@gmail.com>
+ * @date 08/01/2023 5:54 PM
+ */
 class TodoController extends Controller
 {
+    /**
+     * @var TodoService $oTodoService
+     */
+    private TodoService $oTodoService;
+
+    /**
+     * @param TodoService $oTodoService
+     * constructor to inject TodoService layer
+     */
+    public function __construct(TodoService $oTodoService)
+    {
+        $this->oTodoService = $oTodoService;
+    }
+
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        $todos = Todo::query()->get();
+        $oTodos = $this->oTodoService->getTodoList();
 
         return inertia('Todos/Index', [
-            'todos' => $todos,
+            'todos' => $oTodos,
         ]);
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(StoreTodoRequest $oRequest)
     {
-        // BRIEF: Validate the request and save a new TODO, then redirect back to the index
+        $aValidatedData = $oRequest->validated();
+        $this->oTodoService->saveTodo($aValidatedData);
+
+        return redirect()->back();
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Todo $todo)
+    public function update(UpdateTodoRequest $oRequest)
     {
-        // BRIEF: Validate the request and update the TODO's "completed" status, then redirect back to the index
+        $aValidatedData = $oRequest->validated();
+        $this->oTodoService->updateTodo($aValidatedData['id']);
+
+        return redirect()->back();
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Todo $todo)
+    public function destroy(UpdateTodoRequest $oRequest)
     {
-        // BRIEF: Delete the TODO, then redirect back to the index
+        $aValidatedData = $oRequest->validated();
+        $this->oTodoService->deleteTodo($aValidatedData['id']);
+
+        return redirect()->back();
     }
 }
