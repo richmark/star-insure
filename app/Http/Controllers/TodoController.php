@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\DeleteTodoRequest;
 use App\Http\Requests\StoreTodoRequest;
 use App\Http\Requests\UpdateTodoRequest;
 use App\Services\TodoService;
+use App\Models\Todo;
 
 /**
  * Class TodoController
@@ -15,17 +17,17 @@ use App\Services\TodoService;
 class TodoController extends Controller
 {
     /**
-     * @var TodoService $oTodoService
+     * @var Todo $oTodoModel
      */
-    private TodoService $oTodoService;
+    private Todo $oTodoModel;
 
     /**
      * @param TodoService $oTodoService
      * constructor to inject TodoService layer
      */
-    public function __construct(TodoService $oTodoService)
+    public function __construct(Todo $oTodoModel)
     {
-        $this->oTodoService = $oTodoService;
+        $this->oTodoModel = $oTodoModel;
     }
 
     /**
@@ -33,7 +35,7 @@ class TodoController extends Controller
      */
     public function index()
     {
-        $oTodos = $this->oTodoService->getTodoList();
+        $oTodos = $this->oTodoModel->query()->get();
 
         return inertia('Todos/Index', [
             'todos' => $oTodos,
@@ -46,7 +48,7 @@ class TodoController extends Controller
     public function store(StoreTodoRequest $oRequest)
     {
         $aValidatedData = $oRequest->validated();
-        $this->oTodoService->saveTodo($aValidatedData);
+        $this->oTodoModel->create($aValidatedData);
 
         return redirect()->back();
     }
@@ -57,7 +59,11 @@ class TodoController extends Controller
     public function update(UpdateTodoRequest $oRequest)
     {
         $aValidatedData = $oRequest->validated();
-        $this->oTodoService->updateTodo($aValidatedData['id']);
+        $this->oTodoModel
+            ->findOrFail($aValidatedData['id'])
+            ->update([
+                'completed' => $aValidatedData['completed']
+            ]);
 
         return redirect()->back();
     }
@@ -65,10 +71,10 @@ class TodoController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(UpdateTodoRequest $oRequest)
+    public function destroy(DeleteTodoRequest $oRequest)
     {
         $aValidatedData = $oRequest->validated();
-        $this->oTodoService->deleteTodo($aValidatedData['id']);
+        $this->oTodoModel->findOrFail($aValidatedData['id'])->delete();
 
         return redirect()->back();
     }

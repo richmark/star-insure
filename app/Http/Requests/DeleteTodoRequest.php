@@ -5,12 +5,12 @@ namespace App\Http\Requests;
 use Illuminate\Foundation\Http\FormRequest;
 
 /**
- * Class UpdateTodoRequest
+ * Class DeleteTodoRequest
  * @package App\Http\Requests
  * @author Richmark <richmark.jinn.ravina@gmail.com>
- * @date 08/01/2023 5:54 PM
+ * @date 08/02/2023 10:36 AM
  */
-class UpdateTodoRequest extends FormRequest
+class DeleteTodoRequest extends FormRequest
 {
     /**
      * Get the validation rules that apply to the request.
@@ -20,8 +20,7 @@ class UpdateTodoRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'id'  => ['required','exists:todos,id'],
-            'completed' => ['required', 'boolean']
+            'id'  => ['required','exists:todos,id']
         ];
     }
 

@@ -6,7 +6,7 @@ import TodoForm from "@/components/TodoForm";
 import Button from "@/components/common/Button";
 import Card from "@/components/common/Card";
 import { useForm } from "@inertiajs/react";
-import { useSubmit } from "@/lib/forms";
+import { handleChange, useSubmit } from "@/lib/forms";
 
 interface Props {
     todos: Todo[];
@@ -14,32 +14,48 @@ interface Props {
 
 export default function TodosIndex({ todos }: Props) {
     const [modalOpen, setModalOpen] = React.useState(false);
-    const { put, delete: deleteTodo } = useForm();
+
+    const {
+        data,
+        setData,
+        put,
+        delete: deleteTodo,
+    } = useForm({
+        completed: false,
+    });
 
     const onDelete = useSubmit({
         message: "Deleted Successfully!",
+        preserveScroll: true,
     });
 
     const onUpdate = useSubmit({
         message: "Updated Successfully!",
+        preserveScroll: true,
     });
 
-    function handleDeleteTodo(id: number) {
+    const handleDeleteTodo = (id: number) => {
         if (confirm("Are you sure you want to delete this todo?")) {
             deleteTodo(`/todos/${id}`, onDelete);
         }
-    }
+    };
 
-    function handleUpdateTodo(id: number) {
+    const handleUpdateTodo = (
+        event: React.MouseEvent<HTMLInputElement>,
+        id: number,
+        completed: boolean
+    ) => {
         if (confirm("Are you sure you want to update the status?")) {
+            data.completed = !completed;
+            handleChange({ event, data, setData });
             put(`/todos/${id}`, onUpdate);
         }
-    }
+    };
 
     return (
         <Layout>
             <div className="container mt-12 mb-24">
-                <div className="flex flex-col gap-12">
+                <div className="mb-4 flex items-center justify-between gap-x-4">
                     <Button
                         type="button"
                         onClick={() => setModalOpen(!modalOpen)}
@@ -47,60 +63,47 @@ export default function TodosIndex({ todos }: Props) {
                     >
                         Add ToDo
                     </Button>
+                </div>
 
-                    {todos.map((todo) => (
+                {todos.length === 0 ? (
+                    <Card className="flex justify-between gap-x-6 py-5">
+                        <p>No records found</p>
+                    </Card>
+                ) : (
+                    todos.map((todo) => (
                         <Card
                             key={todo.id}
                             className="flex justify-between gap-x-6 py-5"
                         >
-                            <div className="flex gap-x-4">
-                                <div className="min-w-0 flex-auto">
-                                    <p className="text-sm font-semibold leading-6 text-gray-900">
-                                        Title: {todo.title}
-                                    </p>
-                                    <p className="mt-1 truncate text-xs leading-5 text-gray-500">
-                                        Created: {todo.created_at}
-                                    </p>
-                                    <p className="mt-1 truncate text-xs leading-5 text-gray-500">
-                                        Updated: {todo.updated_at}
-                                    </p>
-                                    <p className="mt-1 truncate text-xs leading-5 text-gray-500">
-                                        Status:{" "}
-                                        {todo.completed ? "Completed" : "Todo"}
-                                    </p>
-                                </div>
-                            </div>
-                            <div className="hidden sm:flex sm:flex-col sm:items-end">
-                                <p className="text-sm leading-6 text-gray-900">
-                                    {todo.completed === false ? (
-                                        <Button
-                                            type="button"
-                                            onClick={() =>
-                                                handleUpdateTodo(todo.id)
-                                            }
-                                            className="mr-5"
-                                        >
-                                            Update
-                                        </Button>
-                                    ) : (
-                                        ""
-                                    )}
-
-                                    <Button
-                                        type="button"
-                                        onClick={() =>
-                                            handleDeleteTodo(todo.id)
-                                        }
-                                        className="mr-5"
-                                        theme="danger"
-                                    >
-                                        Delete
-                                    </Button>
-                                </p>
-                            </div>
+                            <span className="flex-1">{todo.title}</span>
+                            <p className="mt-1 truncate text-xs leading-5 text-gray-500">
+                                {todo.completed ? "Completed" : "Todo"}
+                            </p>
+                            <Button
+                                type="button"
+                                onClick={(
+                                    oEvent: React.MouseEvent<HTMLInputElement>
+                                ) =>
+                                    handleUpdateTodo(
+                                        oEvent,
+                                        todo.id,
+                                        todo.completed
+                                    )
+                                }
+                                className="mr-2"
+                            >
+                                Update
+                            </Button>
+                            <Button
+                                type="button"
+                                onClick={() => handleDeleteTodo(todo.id)}
+                                theme="danger"
+                            >
+                                Delete
+                            </Button>
                         </Card>
-                    ))}
-                </div>
+                    ))
+                )}
             </div>
 
             <Modal show={modalOpen} onClose={() => setModalOpen(false)}>
