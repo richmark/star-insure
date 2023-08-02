@@ -35,7 +35,7 @@ class TodoController extends Controller
      */
     public function index()
     {
-        $oTodos = $this->oTodoModel->query()->get();
+        $oTodos = $this->oTodoModel->query()->orderBy('created_at', 'desc')->get();
 
         return inertia('Todos/Index', [
             'todos' => $oTodos,

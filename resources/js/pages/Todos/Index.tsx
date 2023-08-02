@@ -76,9 +76,6 @@ export default function TodosIndex({ todos }: Props) {
                             className="flex justify-between gap-x-6 py-5"
                         >
                             <span className="flex-1">{todo.title}</span>
-                            <p className="mt-1 truncate text-xs leading-5 text-gray-500">
-                                {todo.completed ? "Completed" : "Todo"}
-                            </p>
                             <Button
                                 type="button"
                                 onClick={(
@@ -90,9 +87,9 @@ export default function TodosIndex({ todos }: Props) {
                                         todo.completed
                                     )
                                 }
-                                className="mr-2"
+                                className="mr-2 w-24"
                             >
-                                Update
+                                {todo.completed ? "Completed" : "Todo"}
                             </Button>
                             <Button
                                 type="button"
