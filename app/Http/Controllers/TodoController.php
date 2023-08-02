@@ -5,8 +5,10 @@ namespace App\Http\Controllers;
 use App\Http\Requests\DeleteTodoRequest;
 use App\Http\Requests\StoreTodoRequest;
 use App\Http\Requests\UpdateTodoRequest;
-use App\Services\TodoService;
 use App\Models\Todo;
+use Illuminate\Http\RedirectResponse;
+use Inertia\ResponseFactory;
+use Inertia\Response;
 
 /**
  * Class TodoController
@@ -22,8 +24,8 @@ class TodoController extends Controller
     private Todo $oTodoModel;
 
     /**
-     * @param TodoService $oTodoService
-     * constructor to inject TodoService layer
+     * Constructor to inject TodoModel layer
+     * @param Todo $oTodoModel
      */
     public function __construct(Todo $oTodoModel)
     {
@@ -31,9 +33,10 @@ class TodoController extends Controller
     }
 
     /**
-     * Display a listing of the resource.
+     * Display a listing of the resource
+     * @return ResponseFactory|Response
      */
-    public function index()
+    public function index(): ResponseFactory|Response
     {
         $oTodos = $this->oTodoModel->query()->orderBy('created_at', 'desc')->get();
 
@@ -43,9 +46,10 @@ class TodoController extends Controller
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Store a newly created resource in storage
+     * @return RedirectResponse
      */
-    public function store(StoreTodoRequest $oRequest)
+    public function store(StoreTodoRequest $oRequest): RedirectResponse
     {
         $aValidatedData = $oRequest->validated();
         $this->oTodoModel->create($aValidatedData);
@@ -54,9 +58,10 @@ class TodoController extends Controller
     }
 
     /**
-     * Update the specified resource in storage.
+     * Update the specified resource in storage
+     * @return RedirectResponse
      */
-    public function update(UpdateTodoRequest $oRequest)
+    public function update(UpdateTodoRequest $oRequest): RedirectResponse
     {
         $aValidatedData = $oRequest->validated();
         $this->oTodoModel
@@ -69,9 +74,10 @@ class TodoController extends Controller
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Remove the specified resource from storage
+     * @return RedirectResponse
      */
-    public function destroy(DeleteTodoRequest $oRequest)
+    public function destroy(DeleteTodoRequest $oRequest): RedirectResponse
     {
         $aValidatedData = $oRequest->validated();
         $this->oTodoModel->findOrFail($aValidatedData['id'])->delete();
