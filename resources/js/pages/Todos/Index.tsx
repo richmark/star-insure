@@ -6,7 +6,7 @@ import TodoForm from "@/components/TodoForm";
 import Button from "@/components/common/Button";
 import Card from "@/components/common/Card";
 import { useForm } from "@inertiajs/react";
-import { useSubmit } from "@/lib/forms";
+import { handleChange, useSubmit } from "@/lib/forms";
 
 interface Props {
     todos: Todo[];
@@ -14,72 +14,42 @@ interface Props {
 
 export default function TodosIndex({ todos }: Props) {
     const [modalOpen, setModalOpen] = React.useState(false);
-    const form = useForm<{ ids: number[] }>({
-        ids: [], // Initialize ids as an empty array of numbers
+
+    const {
+        data,
+        setData,
+        put,
+        delete: deleteTodo,
+    } = useForm({
+        completed: false,
     });
-
-    const handleToggle = (id: number) => {
-        const currentIds = form.data.ids;
-        const updatedIds = currentIds.includes(id)
-            ? currentIds.filter((selectedId) => selectedId !== id)
-            : [...currentIds, id];
-
-        form.setData("ids", updatedIds);
-    };
 
     const onDelete = useSubmit({
         message: "Deleted Successfully!",
-        onFinish() {
-            resetData();
-        },
+        preserveScroll: true,
     });
 
     const onUpdate = useSubmit({
         message: "Updated Successfully!",
-        onFinish() {
-            resetData();
-        },
+        preserveScroll: true,
     });
 
-    const resetData = () => {
-        form.setData("ids", []);
-    };
-
-    const handleDeleteTodo = () => {
-        if (form.data.ids.length === 0) {
-            alert("Please select at least one todo to delete.");
-            return;
-        }
-
-        if (confirm("Are you sure you want to delete the selected todo/s?")) {
-            form.post("/todos/bulk-delete", onDelete);
+    const handleDeleteTodo = (id: number) => {
+        if (confirm("Are you sure you want to delete this todo?")) {
+            deleteTodo(`/todos/${id}`, onDelete);
         }
     };
 
-    const handleUpdateTodo = () => {
-        if (form.data.ids.length === 0) {
-            alert("Please select at least one todo to update.");
-            return;
-        }
-
+    const handleUpdateTodo = (
+        event: React.MouseEvent<HTMLInputElement>,
+        id: number,
+        completed: boolean
+    ) => {
         if (confirm("Are you sure you want to update the status?")) {
-            form.post("/todos/bulk-update", onUpdate);
+            data.completed = !completed;
+            handleChange({ event, data, setData });
+            put(`/todos/${id}`, onUpdate);
         }
-    };
-
-    const checkIdStatus = () => {
-        if (form.data.ids.length === 0) {
-            return false;
-        }
-
-        const result = form.data.ids.some((selectedId) => {
-            const matchedData = todos.find((todo) => todo.id === selectedId);
-            if (matchedData && matchedData.completed === true) {
-                return true;
-            }
-        });
-
-        return result;
     };
 
     return (
@@ -92,25 +62,6 @@ export default function TodosIndex({ todos }: Props) {
                         className="mr-auto"
                     >
                         Add ToDo
-                    </Button>
-
-                    <Button
-                        type="button"
-                        onClick={() => handleUpdateTodo()}
-                        className="px-4 py-2 text-white"
-                        theme="info"
-                        disabled={checkIdStatus()}
-                    >
-                        Update ToDo/s
-                    </Button>
-
-                    <Button
-                        type="button"
-                        onClick={() => handleDeleteTodo()}
-                        className="px-4 py-2 text-white"
-                        theme="danger"
-                    >
-                        Delete ToDo/s
                     </Button>
                 </div>
 
@@ -125,15 +76,28 @@ export default function TodosIndex({ todos }: Props) {
                             className="flex justify-between gap-x-6 py-5"
                         >
                             <span className="flex-1">{todo.title}</span>
-                            <p className="mt-1 truncate text-xs leading-5 text-gray-500">
+                            <Button
+                                type="button"
+                                onClick={(
+                                    oEvent: React.MouseEvent<HTMLInputElement>
+                                ) =>
+                                    handleUpdateTodo(
+                                        oEvent,
+                                        todo.id,
+                                        todo.completed
+                                    )
+                                }
+                                className="mr-2 w-24"
+                            >
                                 {todo.completed ? "Completed" : "Todo"}
-                            </p>
-                            <input
-                                type="checkbox"
-                                className="form-checkbox ml-4 h-5 w-5 text-blue-500"
-                                checked={form.data.ids.includes(todo.id)}
-                                onChange={() => handleToggle(todo.id)}
-                            />
+                            </Button>
+                            <Button
+                                type="button"
+                                onClick={() => handleDeleteTodo(todo.id)}
+                                theme="danger"
+                            >
+                                Delete
+                            </Button>
                         </Card>
                     ))
                 )}
